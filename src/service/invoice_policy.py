@@ -25,7 +25,11 @@ def evaluate_policy(
     *,
     settings: PolicySettings,
 ) -> PolicyResult:
+    """Evaluate the policy for the given invoice extraction compared to policy settings business logic."""
+    
+    # list of violations that will be returned by the policy node
     violations: list[PolicyViolation] = []
+    # limits from the policy settings
     lim = dict(settings.limits)
     max_total = float(lim["max_total_eur"])
     min_year = int(lim["min_invoice_year"])
@@ -89,7 +93,7 @@ def evaluate_policy(
             )
         )
 
-    # per_item_gross_worths: sum vs document total (vision) + per-row cap
+    # per_item_gross_worths: sum vs document total, violation if the sum is not within the tolerance
     lines = ext.per_item_gross_worths
     if total is not None and lines:
         s = sum(lines)
