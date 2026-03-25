@@ -1,0 +1,63 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "kpn-genai.fullname" . }}-backend
+  labels:
+    app.kubernetes.io/name: {{ include "kpn-genai.name" . }}
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    component: backend
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: {{ include "kpn-genai.name" . }}
+      app.kubernetes.io/instance: {{ .Release.Name }}
+      component: backend
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: {{ include "kpn-genai.name" . }}
+        app.kubernetes.io/instance: {{ .Release.Name }}
+        component: backend
+    spec:
+      # Default cluster ndots:5 makes external FQDNs with few dots (e.g. *.azure.com) resolve
+      # via search domains first and can break Azure OpenAI DNS inside the pod.
+      dnsConfig:
+        options:
+          - name: ndots
+            value: "2"
+      containers:
+        - name: backend
+          image: "{{ .Values.image.backend.repository }}:{{ .Values.image.backend.tag }}"
+          imagePullPolicy: {{ .Values.image.backend.pullPolicy }}
+          ports:
+            - name: http
+              containerPort: 8000
+          env:
+            - name: LLM_TYPE
+              value: {{ .Values.backend.llmType | default "openai" | quote }}
+            {{- if eq (.Values.backend.llmType | default "openai") "ollama" }}
+            - name: OLLAMA_BASE_URL
+              value: {{ .Values.backend.ollamaBaseUrl | default "http://host.docker.internal:11434" | quote }}
+            {{- end }}
+            {{- if .Values.backend.corsOrigins }}
+            - name: CORS_ORIGINS
+              value: {{ .Values.backend.corsOrigins | quote }}
+            {{- end }}
+          {{- if and (eq (.Values.backend.llmType | default "openai") "openai") .Values.backend.azureSecretName }}
+          envFrom:
+            - secretRef:
+                name: {{ .Values.backend.azureSecretName | quote }}
+          {{- end }}
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: http
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: http
+            initialDelaySeconds: 15
+            periodSeconds: 20

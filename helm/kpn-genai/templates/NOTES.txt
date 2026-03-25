@@ -1,0 +1,17 @@
+1. Open the UI (NodePort example):
+   http://<node-ip>:{{ .Values.frontend.service.nodePort }}
+
+   Or with ClusterIP:
+   kubectl port-forward svc/{{ include "kpn-genai.fullname" . }}-frontend 8080:{{ .Values.frontend.service.port }}
+   then http://127.0.0.1:8080
+
+2. The frontend image calls the API at the URL baked in at build time (default http://127.0.0.1:8000). From your machine, run:
+   kubectl port-forward svc/{{ include "kpn-genai.backendService" . }} 8000:{{ .Values.backend.service.port }}
+   then reload the UI; the browser will reach the API on localhost:8000. For NodePort UI without port-forward, rebuild the frontend with --build-arg VITE_API_BASE_URL=http://<node-ip>:<backend-exposed-port> and set backend.corsOrigins to match your UI origin.
+
+3. Azure OpenAI: create a Secret, then upgrade with llmType=openai and azureSecretName set:
+   kubectl create secret generic kpn-azure -n {{ .Release.Namespace }} --from-literal=AZURE_OPENAI_API_KEY="YOUR_KEY" --from-literal=AZURE_OPENAI_ENDPOINT="https://YOUR_NAME.openai.azure.com/" --from-literal=AZURE_OPENAI_MODEL=gpt-4o --from-literal=AZURE_OPENAI_MODEL_VERSION=2024-12-01-preview
+   helm upgrade {{ .Release.Name }} ./helm/kpn-genai -n {{ .Release.Namespace }} --set backend.llmType=openai --set backend.azureSecretName=kpn-azure
+   (Default values use Ollama; switch back with --set backend.llmType=ollama and omit azureSecretName.)
+
+4. Backend Service (cluster DNS): http://{{ include "kpn-genai.backendService" . }}:{{ .Values.backend.service.port }}

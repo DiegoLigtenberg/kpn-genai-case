@@ -1,5 +1,13 @@
 const $ = (id) => document.getElementById(id);
 
+/** Empty = relative URLs (Vite dev proxy). Set e.g. http://127.0.0.1:8000 for direct API calls (needs CORS). Docker image bakes VITE_API_BASE_URL at build. */
+const API_BASE = (import.meta.env.VITE_API_BASE_URL ?? "").replace(/\/$/, "");
+
+function api(path) {
+  if (!path.startsWith("/")) path = `/${path}`;
+  return API_BASE ? `${API_BASE}${path}` : path;
+}
+
 const LIMIT_FIELDS = [
   ["max_total_eur", "lim-max-total"],
   ["min_invoice_year", "lim-min-year"],
@@ -29,7 +37,7 @@ function fillPolicyForm(data) {
 async function loadPolicy() {
   const msg = $("policy-msg");
   try {
-    const res = await fetch("/policy/reset", { method: "POST" });
+    const res = await fetch(api("/policy/reset"), { method: "POST" });
     if (!res.ok) throw new Error(`${res.status}`);
     const data = await res.json();
     fillPolicyForm(data);
@@ -47,7 +55,7 @@ async function loadPolicy() {
 async function resetPolicyFromFile() {
   const msg = $("policy-msg");
   try {
-    const res = await fetch("/policy/reset", { method: "POST" });
+    const res = await fetch(api("/policy/reset"), { method: "POST" });
     if (!res.ok) throw new Error(`${res.status}`);
     const data = await res.json();
     fillPolicyForm(data);
@@ -69,7 +77,7 @@ async function applyPolicy() {
     limits[key] = key === "min_invoice_year" ? Math.round(n) : n;
   }
   try {
-    const res = await fetch("/policy", {
+    const res = await fetch(api("/policy"), {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ limits }),
@@ -132,7 +140,7 @@ async function runAll() {
   btn.disabled = true;
   run.disabled = true;
   try {
-    const res = await fetch("/invoices/process-preset?data_dir=data", { method: "POST" });
+    const res = await fetch(api("/invoices/process-preset?data_dir=data"), { method: "POST" });
     const text = await res.text();
     let data;
     try {
@@ -170,7 +178,7 @@ async function loadFiles() {
   const hint = $("data-dir");
   const run = $("run-btn");
   try {
-    const res = await fetch("/invoices/data-files");
+    const res = await fetch(api("/invoices/data-files"));
     if (!res.ok) throw new Error(`${res.status} ${res.statusText}`);
     const data = await res.json();
     if (hint) hint.textContent = "";
@@ -204,17 +212,17 @@ function esc(s) {
 
 function rawDataUrl(filename) {
   const q = new URLSearchParams({ filename });
-  return `/invoices/raw-data-file?${q}`;
+  return api(`/invoices/raw-data-file?${q}`);
 }
 
 function atomicPreviewUrl(filename) {
   const q = new URLSearchParams({ filename });
-  return `/invoices/atomic-preview?${q}`;
+  return api(`/invoices/atomic-preview?${q}`);
 }
 
 async function loadLlm() {
   try {
-    const res = await fetch("/invoices/llm");
+    const res = await fetch(api("/invoices/llm"));
     if (!res.ok) return;
     const data = await res.json();
     const sel = $("llm-select");
@@ -229,7 +237,7 @@ async function onLlmChange() {
   const msg = $("llm-msg");
   if (!sel) return;
   try {
-    const res = await fetch("/invoices/llm", {
+    const res = await fetch(api("/invoices/llm"), {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ llm_type: sel.value }),
@@ -521,7 +529,7 @@ async function runPipeline() {
   $("run-all-btn").disabled = true;
   try {
     const q = new URLSearchParams({ filename: name });
-    const res = await fetch(`/invoices/process-data-file?${q}`, { method: "POST" });
+    const res = await fetch(api(`/invoices/process-data-file?${q}`), { method: "POST" });
     const text = await res.text();
     let data;
     try {

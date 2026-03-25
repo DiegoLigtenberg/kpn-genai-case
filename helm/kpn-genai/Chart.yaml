@@ -1,0 +1,6 @@
+apiVersion: v2
+name: kpn-genai
+description: Invoice demo — FastAPI backend + static UI (serve + CORS)
+type: application
+version: 0.1.0
+appVersion: "0.1.0"

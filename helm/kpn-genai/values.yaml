@@ -1,0 +1,32 @@
+# Images (build locally or push to your registry)
+image:
+  backend:
+    repository: kpn-genai-backend
+    tag: latest
+    pullPolicy: IfNotPresent
+  frontend:
+    repository: kpn-genai-frontend
+    tag: latest
+    pullPolicy: IfNotPresent
+
+replicaCount: 2
+
+backend:
+  service:
+    port: 8000
+  # openai = Azure (set azureSecretName). ollama = local Ollama on host (ollamaBaseUrl).
+  llmType: ollama
+  # For llmType=openai: name of Secret in this namespace (keys: AZURE_OPENAI_API_KEY, AZURE_OPENAI_ENDPOINT, optional AZURE_OPENAI_MODEL, AZURE_OPENAI_MODEL_VERSION)
+  azureSecretName: ""
+  ollamaBaseUrl: "http://host.docker.internal:11434"
+  # If set, passed as CORS_ORIGINS (browser must match your UI URL, e.g. http://192.168.1.10:30080 for NodePort UI).
+  corsOrigins: ""
+
+frontend:
+  service:
+    port: 80
+    type: NodePort
+    # Set to empty to use ClusterIP only (access via port-forward)
+    nodePort: 30080
+
+resources: {}

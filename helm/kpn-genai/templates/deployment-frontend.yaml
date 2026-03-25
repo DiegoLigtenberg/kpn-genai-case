@@ -1,0 +1,29 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "kpn-genai.fullname" . }}-frontend
+  labels:
+    app.kubernetes.io/name: {{ include "kpn-genai.name" . }}
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    component: frontend
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: {{ include "kpn-genai.name" . }}
+      app.kubernetes.io/instance: {{ .Release.Name }}
+      component: frontend
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: {{ include "kpn-genai.name" . }}
+        app.kubernetes.io/instance: {{ .Release.Name }}
+        component: frontend
+    spec:
+      containers:
+        - name: frontend
+          image: "{{ .Values.image.frontend.repository }}:{{ .Values.image.frontend.tag }}"
+          imagePullPolicy: {{ .Values.image.frontend.pullPolicy }}
+          ports:
+            - name: http
+              containerPort: 3000
