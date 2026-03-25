@@ -135,19 +135,6 @@ def load_policy_settings(path: Optional[Path] = None) -> PolicySettings:
     return PolicySettings.model_validate(raw)
 
 
-class PolicySettingsHolder:
-    """Holds PolicySettings in memory; graph reads via get()."""
-
-    def __init__(self, settings: PolicySettings) -> None:
-        self._settings = settings
-
-    def get(self) -> PolicySettings:
-        return self._settings
-
-    def set(self, settings: PolicySettings) -> None:
-        self._settings = settings
-
-
 def fingerprint(ext: InvoiceExtraction) -> Optional[str]:
     inv_date = parse_invoice_date(ext.invoice_date_raw)
     if (
@@ -166,6 +153,19 @@ def fingerprint(ext: InvoiceExtraction) -> Optional[str]:
         ]
     )
     return hashlib.sha256(key.encode("utf-8")).hexdigest()
+
+
+class PolicySettingsHolder:
+    """Holds PolicySettings in memory; graph reads via get()."""
+
+    def __init__(self, settings: PolicySettings) -> None:
+        self._settings = settings
+
+    def get(self) -> PolicySettings:
+        return self._settings
+
+    def set(self, settings: PolicySettings) -> None:
+        self._settings = settings
 
 
 class DuplicateRegistry:
