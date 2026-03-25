@@ -1,10 +1,11 @@
 import sys
 from pathlib import Path
-from src.service.graph import build_invoice_graph
 
 _ROOT = Path(__file__).resolve().parents[1]
 if str(_ROOT) not in sys.path:
     sys.path.insert(0, str(_ROOT))
+
+from src.service.graph import build_invoice_graph
 
 
 def main() -> None:
