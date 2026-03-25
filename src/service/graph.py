@@ -1,4 +1,4 @@
-from typing import Any, Optional, cast
+from typing import Any, Optional
 
 from langgraph.graph import END, START, StateGraph
 
@@ -19,11 +19,10 @@ def build_graph(
     duplicates: DuplicateRegistry,
 ):
     g = StateGraph(InvoiceGraphState)
-    # LangGraph's stubs expect Runnable types; our plain callables are valid at runtime.
-    g.add_node("atomic_image", cast(Any, atomic_image_node))
-    g.add_node("extract", cast(Any, make_extract_node(llm, duplicates)))
-    g.add_node("policy", cast(Any, make_policy_node(policy_holder)))
-    g.add_node("final_decision", cast(Any, final_decision_node))
+    g.add_node("atomic_image", atomic_image_node)
+    g.add_node("extract", make_extract_node(llm, duplicates))
+    g.add_node("policy", make_policy_node(policy_holder))
+    g.add_node("final_decision", final_decision_node)
 
     g.add_edge(START, "atomic_image")
     g.add_edge("atomic_image", "extract")
