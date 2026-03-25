@@ -1,9 +1,8 @@
 import hashlib
-import re
 import threading
 from datetime import date
 from pathlib import Path
-from typing import Any, Optional
+from typing import Optional
 
 import yaml
 from dateutil import parser as date_parser
@@ -33,7 +32,7 @@ def evaluate_policy(
     tol = float(lim["line_total_sum_tolerance_eur"])
     max_line = float(lim["max_line_item_amount_eur"])
 
-    total = parse_amount(ext.total_gross_worth)
+    total = ext.total_gross_worth
     inv_date = parse_invoice_date(ext.invoice_date_raw)
 
     # Required fields — one violation each so the UI can list every issue
@@ -90,25 +89,22 @@ def evaluate_policy(
             )
         )
 
-    # per_item_gross_worths: sum vs header total + per-row cap (config max_line_item_amount_eur)
-    per_item_amounts: list[float] = []
-    for x in ext.per_item_gross_worths:
-        a = parse_amount(x)
-        if a is not None:
-            per_item_amounts.append(a)
-    if total is not None and per_item_amounts:
-        s = sum(per_item_amounts)
+    # per_item_gross_worths: sum vs document total (vision) + per-row cap
+    lines = ext.per_item_gross_worths
+    if total is not None and lines:
+        s = sum(lines)
         if abs(s - total) > tol:
             violations.append(
                 PolicyViolation(
                     rule_id=RuleId.RULE_GROSS_SUM_MISMATCH.value,
-                    message=f"sum(per-item gross)={s:.2f} vs total={total:.2f} (tol {tol})",
+                    message=(
+                        f"sum(per-item gross)={s:.2f} vs document total={total:.2f} (tol {tol})"
+                    ),
                 )
             )
 
-    for i, g in enumerate(ext.per_item_gross_worths, start=1):
-        amt = parse_amount(g)
-        if amt is not None and amt > max_line:
+    for i, amt in enumerate(lines, start=1):
+        if amt > max_line:
             violations.append(
                 PolicyViolation(
                     rule_id=RuleId.RULE_LINE_CAP.value,
@@ -118,27 +114,6 @@ def evaluate_policy(
 
     decision = PolicyDecision.REJECT if violations else PolicyDecision.ACCEPT
     return PolicyResult(decision=decision, violations=violations)
-
-
-def parse_amount(value: Any) -> Optional[float]:
-    if value is None:
-        return None
-    if isinstance(value, bool):
-        return None
-    if isinstance(value, (int, float)):
-        return float(value)
-    s = str(value).strip()
-    for sym in "€$£":
-        s = s.replace(sym, "")
-    s = s.replace(" ", "")
-    if re.search(r"\d+,\d{2}$", s) and "." in s:
-        s = s.replace(".", "").replace(",", ".")
-    elif "," in s and "." not in s:
-        s = s.replace(",", ".")
-    try:
-        return float(s)
-    except ValueError:
-        return None
 
 
 def parse_invoice_date(raw: Optional[str]) -> Optional[date]:
