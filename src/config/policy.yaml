@@ -1,0 +1,7 @@
+# Deterministic approval rules. Amounts from extraction are compared as numeric values
+# (see invoice_policy.parse_amount); limits are named *_eur for this exercise.
+limits:
+  max_total_eur: 500
+  min_invoice_year: 2017
+  line_total_sum_tolerance_eur: 1.0
+  max_line_item_amount_eur: 200

@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>KPN Invoice demo</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,600;0,9..40,700;1,9..40,400&family=JetBrains+Mono:wght@400;500&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="/style.css" />
+  </head>
+  <body>
+    <div class="bg"></div>
+    <main class="shell">
+      <header class="hero">
+        <p class="eyebrow">GenAI case · interview-sized</p>
+        <h1>Invoice extraction & policy</h1>
+        <p class="lede">
+          Choose Azure or local Ollama, then a file from <code>data/</code>. You get
+          <strong>ACCEPT</strong> or <strong>REJECT</strong> from the limits below.
+        </p>
+      </header>
+
+      <section class="panel policy-panel">
+        <h2 class="subhead">Policy limits</h2>
+        <p class="policy-hint">
+          Defaults match <code>src/config/policy.yaml</code>. “Apply” only updates this API session—the YAML file on disk is never written. Reload the page or restart the API to go back to file defaults.
+        </p>
+        <div class="policy-grid">
+          <label class="policy-field">
+            <span>Max total (EUR)</span>
+            <input type="number" id="lim-max-total" step="any" min="0" value="500" />
+          </label>
+          <label class="policy-field">
+            <span>Min invoice year</span>
+            <input type="number" id="lim-min-year" step="1" value="2017" />
+          </label>
+          <label class="policy-field">
+            <span>Sum tolerance (EUR)</span>
+            <input type="number" id="lim-tol" step="any" min="0" value="1" />
+          </label>
+          <label class="policy-field">
+            <span>Max per line item (EUR)</span>
+            <input type="number" id="lim-max-line" step="any" min="0" value="200" />
+          </label>
+        </div>
+        <div class="policy-actions">
+          <button type="button" id="policy-apply" class="btn secondary">Apply rules</button>
+          <button type="button" id="policy-reset" class="btn secondary">Reset to policy.yaml</button>
+        </div>
+        <p id="policy-msg" class="hint policy-msg"></p>
+      </section>
+
+      <section class="panel controls">
+        <label class="field">
+          <span class="label">Vision model</span>
+          <select id="llm-select">
+            <option value="openai">Azure OpenAI (gpt-4o)</option>
+            <option value="ollama">Ollama · qwen3.5 (local, vision)</option>
+          </select>
+        </label>
+        <p id="llm-msg" class="hint"></p>
+        <label class="field">
+          <span class="label">Invoice from <code>data/</code></span>
+          <select id="file-select" disabled>
+            <option value="">Loading…</option>
+          </select>
+        </label>
+        <div class="run-row">
+          <button type="button" id="run-btn" class="btn primary" disabled>Run pipeline</button>
+          <button type="button" id="run-all-btn" class="btn primary ghost">Run all in data/</button>
+        </div>
+        <p id="data-dir" class="hint"></p>
+      </section>
+
+      <section id="status" class="panel status hidden" aria-live="polite"></section>
+
+      <section id="batch-section" class="panel batch hidden">
+        <h2 class="subhead">Batch results</h2>
+        <div id="batch-wrap" class="batch-wrap"></div>
+      </section>
+
+      <section id="result" class="result hidden"></section>
+    </main>
+    <script type="module" src="/main.js"></script>
+  </body>
+</html>
