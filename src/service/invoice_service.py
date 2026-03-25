@@ -15,11 +15,14 @@ from src.service.temp_storage import clear_content_hash_dir, clear_invoice_temp_
 
 _INVOICE_SUFFIXES = frozenset({".pdf", ".jpg", ".jpeg", ".png", ".tif", ".tiff"})
 
+# Repo root: src/service/invoice_service.py -> parents[2] == project root (not process cwd).
+_REPO_ROOT = Path(__file__).resolve().parents[2]
+
 
 def resolve_data_dir(data_dir: str) -> Path:
-    """Resolve data_dir; relative paths use cwd."""
+    """Resolve data_dir; relative paths are under the repo root (uvicorn cwd may differ)."""
     p = Path(data_dir)
-    return p.resolve() if p.is_absolute() else (Path.cwd() / p).resolve()
+    return p.resolve() if p.is_absolute() else (_REPO_ROOT / p).resolve()
 
 
 class InvoiceService:
